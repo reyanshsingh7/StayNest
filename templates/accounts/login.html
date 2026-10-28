@@ -14,7 +14,7 @@
 
     <form method="post" novalidate class="stack">
       {% csrf_token %}
-      {% with next_url=next|default:request.GET.next %}
+      {% with next_url=next|default:"" %}
         {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
       {% endwith %}
 
