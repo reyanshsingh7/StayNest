@@ -18,7 +18,7 @@ A Django hostel/PG discovery and booking-request platform. Property owners list 
 
 ```powershell
 # 1. Clone / unzip the project, then enter its directory
-cd StayNest_unified
+cd StayNest
 
 # 2. Create a virtual environment
 py -3.12 -m venv .venv
@@ -119,7 +119,7 @@ Open `http://127.0.0.1:8000/` in your browser.
 ## Project layout
 
 ```
-StayNest_unified/
+StayNest/
 ├── accounts/          # Custom email-login user model (Student / Owner roles)
 ├── bookings/          # BookingRequest model, forms, views
 ├── config/            # Django project settings, root URL config
@@ -172,10 +172,11 @@ Render sets `RENDER_EXTERNAL_HOSTNAME` automatically, and the settings add it to
 - The `docs/` folder holds development-time integration notes written while the team merged their parts; some details there (e.g. upper-case status values, partial file names) are out of date. This README is the current reference.
 
 ## Contributors
+- Reyansh Singh: Project lead / Core Backend, `docs/FRONTEND_README.md`.
+- Rishi Singh: Frontend / UI-UX (templates and static assets), per `docs/FRONTEND_README.md`.
+- Priyanshu Yadav: Database / Backend models, per `docs/FRONTEND_README.md`.
 
-- Rishi Singh: frontend / UI-UX (templates and static assets), per `docs/FRONTEND_README.md`.
 
-Other contributors and roles are not recorded in the project files; add them here.
 
 ## License
 
