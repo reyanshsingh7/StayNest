@@ -218,3 +218,19 @@ if not DEBUG:
     # Render (and most hosts) terminate HTTPS at a proxy and forward plain HTTP
     # to Django. Without this header, SECURE_SSL_REDIRECT would loop forever.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+# ---------------------------------------------------------------------------
+# Logging: print errors (with tracebacks) to the console so they show up in
+# the Render "Logs" tab even when DEBUG is False.
+# ---------------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}

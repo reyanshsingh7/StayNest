@@ -21,11 +21,11 @@
         <legend>I want to register as a</legend>
         <div class="role-options">
           <label class="role-option">
-            <input type="radio" name="role" value="student" {% if form.role.value|default:'student' == 'student' %}checked{% endif %}>
+            <input type="radio" name="role" value="STUDENT" {% if form.role.value != 'OWNER' %}checked{% endif %}>
             <span><strong>Student</strong><small>Search properties and send requests</small></span>
           </label>
           <label class="role-option">
-            <input type="radio" name="role" value="owner" {% if form.role.value == 'owner' %}checked{% endif %}>
+            <input type="radio" name="role" value="OWNER" {% if form.role.value == 'OWNER' %}checked{% endif %}>
             <span><strong>Owner</strong><small>List and manage my property</small></span>
           </label>
         </div>
