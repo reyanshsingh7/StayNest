@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+
+{% block content %}
+<div class="container auth">
+  <div class="auth-card card">
+    <h1>Log in</h1>
+    <p class="muted">Use the email and password you registered with.</p>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert--error" role="alert"><ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+    {% endif %}
+
+    <form method="post" novalidate class="stack">
+      {% csrf_token %}
+      {% with next_url=next|default:request.GET.next %}
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+      {% endwith %}
+
+      {% include "partials/field.html" with field=form.username label="Email address" %}
+      {% include "partials/field.html" with field=form.password label="Password" %}
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block">Log in</button>
+    </form>
+
+    <p class="auth-switch">New to StayNest? <a href="{% url 'register' %}">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% comment %}
+Booking request card.
+Usage: {% include "partials/booking_card.html" with booking=booking viewer="student" %}
+       {% include "partials/booking_card.html" with booking=booking viewer="owner" %}
+{% endcomment %}
+<article class="card request-card">
+  <header class="request-card__head">
+    <div>
+      {% if viewer == 'owner' %}
+        <h3 class="request-card__title">{{ booking.student.get_full_name|default:booking.student.email }}</h3>
+        <p class="muted">Request for <a href="{% url 'property_detail' booking.property.pk %}">{{ booking.property.name }}</a></p>
+      {% else %}
+        <h3 class="request-card__title"><a href="{% url 'property_detail' booking.property.pk %}">{{ booking.property.name }}</a></h3>
+        <p class="muted">{% if booking.property.locality %}{{ booking.property.locality }}, {% endif %}{{ booking.property.city }}</p>
+      {% endif %}
+    </div>
+    {% include "partials/status_badge.html" with status=booking.status label=booking.get_status_display %}
+  </header>
+
+  <dl class="meta">
+    {% if viewer == 'owner' %}
+    <div><dt>Student email</dt><dd>{{ booking.student.email }}</dd></div>
+    {% endif %}
+    <div><dt>Submitted</dt><dd>{{ booking.created_at|date:"j M Y" }}</dd></div>
+    <div><dt>Monthly rent</dt><dd>&#8377;{{ booking.property.monthly_rent|floatformat:"0g" }}</dd></div>
+  </dl>
+
+  {% if booking.message %}
+  <p class="request-card__msg"><strong>Message:</strong> {{ booking.message|truncatewords:40 }}</p>
+  {% endif %}
+
+  {% if viewer == 'student' and booking.status == 'accepted' %}
+  <p class="note note--ok">The owner accepted your request. This is not a payment or a guaranteed reservation, so confirm the next steps with the owner.</p>
+  {% endif %}
+
+  {% if booking.status == 'pending' %}
+  <div class="request-card__actions">
+    {% if viewer == 'student' %}
+      <form method="post" action="{% url 'booking_cancel' booking.pk %}" data-confirm="Cancel your request for {{ booking.property.name }}? The owner will no longer see it as pending." data-confirm-label="Cancel request" data-confirm-danger>
+        {% csrf_token %}
+        <button type="submit" class="btn btn--outline-danger btn--sm">Cancel request</button>
+      </form>
+    {% elif viewer == 'owner' %}
+      <form method="post" action="{% url 'booking_respond' booking.pk %}" data-confirm="Accept this request from {{ booking.student.get_full_name|default:booking.student.email }}? The student will see it as Accepted. No payment is taken." data-confirm-label="Accept request">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="accept">
+        <button type="submit" class="btn btn--primary btn--sm">Accept</button>
+      </form>
+      <form method="post" action="{% url 'booking_respond' booking.pk %}" data-confirm="Reject this request from {{ booking.student.get_full_name|default:booking.student.email }}?" data-confirm-label="Reject request" data-confirm-danger>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <button type="submit" class="btn btn--outline-danger btn--sm">Reject</button>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</article>

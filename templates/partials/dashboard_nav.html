@@ -1,0 +1,17 @@
+{% comment %}
+Usage: {% include "partials/dashboard_nav.html" with active="overview" %}
+active: overview | requests | properties | add | browse
+{% endcomment %}
+<nav class="dash-nav" aria-label="Dashboard navigation">
+  <ul>
+    {% if user.is_owner %}
+      <li><a href="{% url 'owner_dashboard' %}"{% if active == 'overview' %} aria-current="page"{% endif %}>Overview</a></li>
+      <li><a href="{% url 'my_properties' %}"{% if active == 'properties' %} aria-current="page"{% endif %}>My properties</a></li>
+      <li><a href="{% url 'property_create' %}"{% if active == 'add' %} aria-current="page"{% endif %}>Add property</a></li>
+    {% else %}
+      <li><a href="{% url 'student_dashboard' %}"{% if active == 'overview' %} aria-current="page"{% endif %}>Overview</a></li>
+      <li><a href="{% url 'my_requests' %}"{% if active == 'requests' %} aria-current="page"{% endif %}>My requests</a></li>
+      <li><a href="{% url 'property_list' %}"{% if active == 'browse' %} aria-current="page"{% endif %}>Browse properties</a></li>
+    {% endif %}
+  </ul>
+</nav>

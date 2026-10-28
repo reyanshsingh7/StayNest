@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{% if property %}Edit {{ property.name }}{% else %}Add a property{% endif %}{% endblock %}
+{% block body_class %}page-form{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <div class="dashboard">
+    <aside class="dash-side">{% include "partials/dashboard_nav.html" with active="add" %}</aside>
+
+    <div class="dash-main">
+      <header class="page-head">
+        <div>
+          <h1>{% if property %}Edit property{% else %}Add a property{% endif %}</h1>
+          <p class="muted">An administrator reviews each listing before it appears in public search.</p>
+        </div>
+      </header>
+
+      {% if form.non_field_errors %}
+      <div class="alert alert--error" role="alert"><ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+      {% elif form.errors %}
+      <div class="alert alert--error" role="alert"><p>Some fields need your attention. Fix the highlighted fields and save again.</p></div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate class="stack stack--lg" action="{% if property %}{% url 'property_edit' property.pk %}{% else %}{% url 'property_create' %}{% endif %}">
+        {% csrf_token %}
+
+        <fieldset class="card form-section">
+          <legend>Basic details</legend>
+          <div class="form-grid">
+            <div class="span-2">{% include "partials/field.html" with field=form.name label="Property name" %}</div>
+            {% include "partials/field.html" with field=form.property_type label="Property type" %}
+            {% include "partials/field.html" with field=form.accommodation_for label="Who can stay here?" %}
+            {% include "partials/field.html" with field=form.monthly_rent label="Monthly rent (₹)" %}
+            <div class="span-2">{% include "partials/field.html" with field=form.description label="Description" hint="Describe rooms, rules, food, distance to campus and anything else students should know." %}</div>
+          </div>
+        </fieldset>
+
+        <fieldset class="card form-section">
+          <legend>Location</legend>
+          <div class="form-grid">
+            {% include "partials/field.html" with field=form.city label="City" %}
+            {% include "partials/field.html" with field=form.locality label="Locality" %}
+            <div class="span-2">{% include "partials/field.html" with field=form.address label="Address" %}</div>
+            {% include "partials/field.html" with field=form.postal_code label="Postal code" %}
+          </div>
+        </fieldset>
+
+        <fieldset class="card form-section">
+          <legend>Availability</legend>
+          <div class="field{% if form.is_available.errors %} field--error{% endif %}">
+            <label class="check check--box" for="{{ form.is_available.id_for_label }}">
+              {{ form.is_available }}
+              <span>This property is currently available for new requests</span>
+            </label>
+            <p class="field__help">Availability is separate from approval. Unavailable properties are hidden from search by default.</p>
+            {% if form.is_available.errors %}<ul class="field__errors" role="alert">{% for error in form.is_available.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        </fieldset>
+
+        {% if form.amenities %}
+        <fieldset class="card form-section">
+          <legend>Amenities</legend>
+          <div class="check-grid">
+            {% for checkbox in form.amenities %}
+            <label class="check check--box" for="{{ checkbox.id_for_label }}">{{ checkbox.tag }}<span>{{ checkbox.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          {% if form.amenities.errors %}<ul class="field__errors" role="alert">{% for error in form.amenities.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </fieldset>
+        {% endif %}
+
+        <fieldset class="card form-section">
+          <legend>Photos</legend>
+
+          {% if property and property.images.all %}
+          <p class="field__help">Current photos</p>
+          <ul class="preview-grid preview-grid--existing">
+            {% for img in property.images.all %}
+            <li class="preview">
+              <img src="{{ img.image.url }}" alt="Current photo {{ forloop.counter }} of {{ property.name }}">
+              {% if img.is_primary %}<span class="chip chip--solid">Cover</span>{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          <div class="field{% if form.images.errors %} field--error{% endif %}" data-upload data-max-mb="5">
+            <label for="id_images">{% if property %}Add more photos{% else %}Upload photos{% endif %}</label>
+            <input type="file" id="id_images" name="images" accept="image/*" multiple data-image-input>
+            <p class="field__help">Select one or more images (JPG, PNG or WebP). The first image is used as the cover photo. The server checks file type and size.</p>
+            {% if form.images.errors %}<ul class="field__errors" role="alert">{% for error in form.images.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            <ul class="preview-grid" data-preview-list aria-live="polite"></ul>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary btn--lg">{% if property %}Save changes{% else %}Submit property for approval{% endif %}</button>
+          <a class="btn btn--ghost btn--lg" href="{% url 'my_properties' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

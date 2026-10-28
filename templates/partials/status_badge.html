@@ -1,0 +1,6 @@
+{% comment %}
+Usage: {% include "partials/status_badge.html" with status=booking.status label=booking.get_status_display %}
+Works for booking statuses (pending, accepted, rejected, cancelled)
+and listing approval statuses (pending, approved, rejected).
+{% endcomment %}
+<span class="badge badge--{{ status }}">{{ label }}</span>

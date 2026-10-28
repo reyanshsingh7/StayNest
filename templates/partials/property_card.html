@@ -1,0 +1,30 @@
+{% comment %}
+Public property card. Usage: {% include "partials/property_card.html" with property=property %}
+{% endcomment %}
+{% with img=property.primary_image %}
+<article class="card property-card">
+  <a class="property-card__media" href="{% url 'property_detail' property.pk %}" tabindex="-1" aria-hidden="true">
+    {% if img %}
+      <img src="{{ img.image.url }}" alt="" loading="lazy">
+    {% else %}
+      <span class="media-placeholder">No photo yet</span>
+    {% endif %}
+    <span class="chip chip--{{ property.property_type }}">{{ property.get_property_type_display }}</span>
+  </a>
+  <div class="property-card__body">
+    <h3 class="property-card__title"><a href="{% url 'property_detail' property.pk %}">{{ property.name }}</a></h3>
+    <p class="property-card__loc">{% if property.locality %}{{ property.locality }}, {% endif %}{{ property.city }}</p>
+    <div class="property-card__tags">
+      <span class="badge badge--accom-{{ property.accommodation_for }}">{{ property.get_accommodation_for_display }}</span>
+    </div>
+    <div class="property-card__foot">
+      <p class="price">&#8377;{{ property.monthly_rent|floatformat:"0g" }}<span> / month</span></p>
+      {% if property.is_available %}
+        <span class="badge badge--available">Available</span>
+      {% else %}
+        <span class="badge badge--unavailable">Unavailable</span>
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% endwith %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Student dashboard{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <div class="dashboard">
+    <aside class="dash-side">{% include "partials/dashboard_nav.html" with active="overview" %}</aside>
+
+    <div class="dash-main">
+      <header class="page-head">
+        <div>
+          <h1>Welcome, {{ user.get_full_name|default:user.email }}</h1>
+          <p class="muted">Track your booking requests and find your next place.</p>
+        </div>
+        <a class="btn btn--primary" href="{% url 'property_list' %}">Browse properties</a>
+      </header>
+
+      <ul class="stat-row" aria-label="Request summary">
+        <li class="stat"><span class="stat__num">{{ total_count|default:0 }}</span><span class="stat__label">Total requests</span></li>
+        <li class="stat"><span class="stat__num">{{ pending_count|default:0 }}</span><span class="stat__label">Pending</span></li>
+        <li class="stat"><span class="stat__num">{{ accepted_count|default:0 }}</span><span class="stat__label">Accepted</span></li>
+      </ul>
+
+      <section aria-labelledby="recent-title">
+        <div class="section-head">
+          <h2 id="recent-title">Recent requests</h2>
+          {% if bookings %}<a href="{% url 'my_requests' %}">View all requests</a>{% endif %}
+        </div>
+
+        {% if bookings %}
+          <div class="stack">
+            {% for booking in bookings|slice:":5" %}
+              {% include "partials/booking_card.html" with booking=booking viewer="student" %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <h3>You have not sent any requests yet</h3>
+            <p>Find a hostel or PG you like and send a booking request from its page.</p>
+            <div class="empty-state__actions"><a class="btn btn--primary" href="{% url 'property_list' %}">Browse properties</a></div>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

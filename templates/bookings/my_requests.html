@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}My booking requests{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <div class="dashboard">
+    <aside class="dash-side">{% include "partials/dashboard_nav.html" with active="requests" %}</aside>
+
+    <div class="dash-main">
+      <header class="page-head">
+        <div>
+          <h1>My booking requests</h1>
+          <p class="muted">You can cancel a request while it is pending.</p>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="Filter requests by status">
+        <a href="{% url 'my_requests' %}"{% if not request.GET.status %} aria-current="page"{% endif %}>All</a>
+        <a href="{% url 'my_requests' %}?status=pending"{% if request.GET.status == 'pending' %} aria-current="page"{% endif %}>Pending</a>
+        <a href="{% url 'my_requests' %}?status=accepted"{% if request.GET.status == 'accepted' %} aria-current="page"{% endif %}>Accepted</a>
+        <a href="{% url 'my_requests' %}?status=rejected"{% if request.GET.status == 'rejected' %} aria-current="page"{% endif %}>Rejected</a>
+        <a href="{% url 'my_requests' %}?status=cancelled"{% if request.GET.status == 'cancelled' %} aria-current="page"{% endif %}>Cancelled</a>
+      </nav>
+
+      {% if bookings %}
+        <div class="stack">
+          {% for booking in bookings %}
+            {% include "partials/booking_card.html" with booking=booking viewer="student" %}
+          {% endfor %}
+        </div>
+
+        {% if page_obj and page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Pagination">
+          {% if page_obj.has_previous %}<a class="btn btn--outline btn--sm" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span class="btn btn--outline btn--sm is-disabled" aria-disabled="true">Previous</span>{% endif %}
+          <span class="pagination__info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}<a class="btn btn--outline btn--sm" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% else %}<span class="btn btn--outline btn--sm is-disabled" aria-disabled="true">Next</span>{% endif %}
+        </nav>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          {% if request.GET.status %}
+            <h2>No {{ request.GET.status }} requests</h2>
+            <p>Requests with this status will appear here.</p>
+            <div class="empty-state__actions"><a class="btn btn--outline" href="{% url 'my_requests' %}">Show all requests</a></div>
+          {% else %}
+            <h2>No requests yet</h2>
+            <p>When you send a booking request, you can follow its status here.</p>
+            <div class="empty-state__actions"><a class="btn btn--primary" href="{% url 'property_list' %}">Browse properties</a></div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

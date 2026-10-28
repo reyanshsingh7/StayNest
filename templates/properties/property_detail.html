@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ property.name }}{% endblock %}
+{% block meta_description %}{{ property.get_property_type_display }} in {{ property.city }}. Monthly rent &#8377;{{ property.monthly_rent|floatformat:"0g" }}.{% endblock %}
+{% block body_class %}page-detail{% endblock %}
+
+{% block content %}
+{% with images=property.images.all %}
+{% with primary=property.primary_image %}
+<div class="container page">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'property_list' %}">Properties</a></li>
+      <li aria-current="page">{{ property.name }}</li>
+    </ol>
+  </nav>
+
+  {% if property.approval_status and property.approval_status != 'approved' %}
+  <div class="alert alert--warning" role="status">
+    <p>This listing is not public yet. Its approval status is <strong>{{ property.get_approval_status_display }}</strong>. Only you can see this page.</p>
+  </div>
+  {% endif %}
+
+  <header class="detail-head">
+    <div>
+      <div class="detail-head__tags">
+        <span class="chip chip--{{ property.property_type }}">{{ property.get_property_type_display }}</span>
+        {% if property.is_available %}<span class="badge badge--available">Available</span>{% else %}<span class="badge badge--unavailable">Unavailable</span>{% endif %}
+      </div>
+      <h1>{{ property.name }}</h1>
+      <p class="detail-head__loc">{% if property.locality %}{{ property.locality }}, {% endif %}{{ property.city }}</p>
+    </div>
+    {% if property.is_available and not user.is_owner %}
+      <a class="btn btn--primary only-mobile" href="#request">Request to book</a>
+    {% endif %}
+  </header>
+
+  <div class="detail-grid">
+    <div class="detail-main">
+      <section class="gallery" data-gallery aria-label="Property photos">
+        <div class="gallery__main">
+          {% if primary %}
+            <img src="{{ primary.image.url }}" alt="{{ property.name }}, main photo" data-gallery-main>
+          {% else %}
+            <span class="media-placeholder media-placeholder--lg">No photos have been added yet</span>
+          {% endif %}
+        </div>
+        {% if images|length > 1 %}
+        <ul class="gallery__thumbs">
+          {% for img in images %}
+          <li>
+            <button type="button" class="gallery__thumb" data-gallery-thumb data-full="{{ img.image.url }}" data-alt="{{ property.name }}, photo {{ forloop.counter }}" aria-label="Show photo {{ forloop.counter }} of {{ images|length }}"{% if forloop.first %} aria-current="true"{% endif %}>
+              <img src="{{ img.image.url }}" alt="" loading="lazy">
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </section>
+
+      <section class="detail-section" aria-labelledby="about-title">
+        <h2 id="about-title">About this property</h2>
+        {% if property.description %}
+          <div class="prose">{{ property.description|linebreaks }}</div>
+        {% else %}
+          <p class="muted">The owner has not added a description yet.</p>
+        {% endif %}
+      </section>
+
+      <section class="detail-section" aria-labelledby="amen-title">
+        <h2 id="amen-title">Amenities</h2>
+        {% if property.amenities.all %}
+          <ul class="tag-list">
+            {% for amenity in property.amenities.all %}<li class="tag">{{ amenity.name }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">No amenities have been listed.</p>
+        {% endif %}
+      </section>
+
+      <section class="detail-section" aria-labelledby="accom-title">
+        <h2 id="accom-title">Accommodation policy</h2>
+        <p>
+          <span class="badge badge--accom-{{ property.accommodation_for }}">{{ property.get_accommodation_for_display }}</span>
+        </p>
+        <p class="muted small">This is owner-provided information. StayNest does not independently verify accommodation policies.</p>
+      </section>
+
+      <section class="detail-section" aria-labelledby="loc-title">
+        <h2 id="loc-title">Location</h2>
+        <dl class="facts">
+          <div><dt>City</dt><dd>{{ property.city }}</dd></div>
+          {% if property.locality %}<div><dt>Locality</dt><dd>{{ property.locality }}</dd></div>{% endif %}
+          {% if property.address %}<div><dt>Address</dt><dd>{{ property.address }}</dd></div>{% endif %}
+          {% if property.postal_code %}<div><dt>Postal code</dt><dd>{{ property.postal_code }}</dd></div>{% endif %}
+        </dl>
+      </section>
+    </div>
+
+    <aside class="detail-side">
+      <div class="booking-card card" id="request">
+        <p class="price price--lg">&#8377;{{ property.monthly_rent|floatformat:"0g" }}<span> / month</span></p>
+
+        {% if not property.is_available %}
+          <p class="note">This property is unavailable right now, so booking requests are closed.</p>
+
+        {% elif not user.is_authenticated %}
+          <p class="muted">Log in or create a student account to send a booking request.</p>
+          <a class="btn btn--primary btn--block" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to request</a>
+          <a class="btn btn--outline btn--block" href="{% url 'register' %}">Create a student account</a>
+
+        {% elif user.is_student %}
+          {% if existing_booking %}
+            <p>You already have a request for this property:</p>
+            <p>{% include "partials/status_badge.html" with status=existing_booking.status label=existing_booking.get_status_display %}</p>
+            <a class="btn btn--outline btn--block" href="{% url 'my_requests' %}">View my requests</a>
+          {% else %}
+            <h2 class="booking-card__title">Send a booking request</h2>
+            {% if booking_form.non_field_errors %}
+            <div class="alert alert--error" role="alert"><ul>{% for error in booking_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+            {% endif %}
+            <form method="post" action="{% url 'booking_create' property.pk %}" novalidate class="stack">
+              {% csrf_token %}
+              <div class="field{% if booking_form.message.errors %} field--error{% endif %}">
+                <label for="id_message">Message to the owner <span class="optional">(optional)</span></label>
+                <textarea id="id_message" name="message" rows="4" maxlength="500" data-count="count-message" placeholder="Introduce yourself and share any questions.">{{ booking_form.message.value|default_if_none:'' }}</textarea>
+                <p class="field__help"><span id="count-message">500</span> characters left</p>
+                {% if booking_form.message.errors %}<ul class="field__errors" role="alert">{% for error in booking_form.message.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+              </div>
+              <button type="submit" class="btn btn--primary btn--block">Send booking request</button>
+            </form>
+          {% endif %}
+
+        {% elif user.is_owner %}
+          {% if property.owner_id == user.pk %}
+            <p class="muted">This is your listing.</p>
+            <a class="btn btn--outline btn--block" href="{% url 'property_edit' property.pk %}">Edit this property</a>
+          {% else %}
+            <p class="muted">Booking requests can only be sent from a student account.</p>
+          {% endif %}
+        {% endif %}
+
+        <p class="booking-card__note">Sending a request does not reserve the property or take a payment. The owner chooses whether to accept it.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endwith %}
+{% endwith %}
+{% endblock %}

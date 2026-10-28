@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Find hostels and PGs near your campus{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="hero__copy">
+      <h1 id="hero-title">Find a hostel or PG that fits your student life</h1>
+      <p class="lead">Browse approved listings, compare rent and amenities, and send a booking request straight to the owner.</p>
+      <ul class="hero__points">
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m6.5 10.2 2.4 2.4 4.6-5"/></svg>Administrator-approved listings</li>
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m6.5 10.2 2.4 2.4 4.6-5"/></svg>Requests go straight to owners</li>
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m6.5 10.2 2.4 2.4 4.6-5"/></svg>No payment needed to send a request</li>
+      </ul>
+    </div>
+
+    <form class="search-bar card" method="get" action="{% url 'property_list' %}" role="search" aria-label="Search properties" data-rent-form>
+      <div class="search-bar__grid">
+        <div class="field">
+          <label for="home-city">City</label>
+          <input id="home-city" name="city" type="text" list="city-options" placeholder="Enter a city" autocomplete="off">
+          {% if cities %}<datalist id="city-options">{% for c in cities %}<option value="{{ c }}">{% endfor %}</datalist>{% endif %}
+        </div>
+        <div class="field">
+          <label for="home-type">Property type</label>
+          <select id="home-type" name="property_type">
+            <option value="">Hostel or PG</option>
+            <option value="hostel">Hostel</option>
+            <option value="pg">PG</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="home-min">Min rent (&#8377;)</label>
+          <input id="home-min" name="min_rent" type="number" min="0" step="500" inputmode="numeric" placeholder="0" data-min-rent>
+        </div>
+        <div class="field">
+          <label for="home-max">Max rent (&#8377;)</label>
+          <input id="home-max" name="max_rent" type="number" min="0" step="500" inputmode="numeric" placeholder="Any" data-max-rent>
+        </div>
+        <button type="submit" class="btn btn--primary btn--lg search-bar__btn">Search</button>
+      </div>
+    </form>
+
+    <p class="hero__links">
+      <a href="{% url 'property_list' %}">Browse all properties</a>
+      {% if not user.is_authenticated %}
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'register' %}">Create a free account</a>
+      {% endif %}
+    </p>
+
+    <div class="accom-shortcuts" aria-label="Quick filters by accommodation type">
+      <a class="accom-shortcut accom-shortcut--girls" href="{% url 'property_list' %}?accommodation_for=girls">
+        <span class="accom-shortcut__icon" aria-hidden="true">♀</span>
+        <span>Girls' Hostels &amp; PGs</span>
+      </a>
+      <a class="accom-shortcut accom-shortcut--boys" href="{% url 'property_list' %}?accommodation_for=boys">
+        <span class="accom-shortcut__icon" aria-hidden="true">♂</span>
+        <span>Boys' Hostels &amp; PGs</span>
+      </a>
+      <a class="accom-shortcut accom-shortcut--all" href="{% url 'property_list' %}?accommodation_for=all">
+        <span class="accom-shortcut__icon" aria-hidden="true">⊕</span>
+        <span>Co-ed / All Genders</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="featured-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="featured-title">Recently approved properties</h2>
+      <a href="{% url 'property_list' %}">See all properties</a>
+    </div>
+
+    {% if featured_properties %}
+      <div class="property-grid">
+        {% for property in featured_properties %}
+          {% include "partials/property_card.html" with property=property %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No properties are listed yet</h3>
+        <p>Approved hostels and PGs will appear here. If you own a property, you can create an account and add it for approval.</p>
+        <div class="empty-state__actions">
+          <a class="btn btn--outline" href="{% url 'property_list' %}">Browse properties</a>
+          {% if not user.is_authenticated %}<a class="btn btn--primary" href="{% url 'register' %}">Create an account</a>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section--alt" aria-labelledby="how-title">
+  <div class="container">
+    <h2 id="how-title">How StayNest works</h2>
+    <ol class="steps">
+      <li>
+        <h3>Search and compare</h3>
+        <p>Filter by city, locality, property type, rent and amenities to narrow down listings.</p>
+      </li>
+      <li>
+        <h3>Send a booking request</h3>
+        <p>Create a student account, pick a property and tell the owner when you would like to move in.</p>
+      </li>
+      <li>
+        <h3>Hear back from the owner</h3>
+        <p>The owner accepts or rejects your request. You can track the status from your dashboard.</p>
+      </li>
+    </ol>
+    <p class="muted steps__note">A request is not a payment and does not guarantee accommodation. The owner makes the final decision.</p>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="owner-title">
+  <div class="container">
+    <div class="cta-band card">
+      <div>
+        <h2 id="owner-title">Own a hostel or PG?</h2>
+        <p>List your property with photos, rent and amenities. An administrator reviews each listing before it appears publicly.</p>
+      </div>
+      <div class="cta-band__actions">
+        {% if user.is_authenticated and user.is_owner %}
+          <a class="btn btn--primary" href="{% url 'property_create' %}">Add a property</a>
+        {% elif not user.is_authenticated %}
+          <a class="btn btn--primary" href="{% url 'register' %}">Register as an owner</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Owner dashboard{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <div class="dashboard">
+    <aside class="dash-side">{% include "partials/dashboard_nav.html" with active="overview" %}</aside>
+
+    <div class="dash-main">
+      <header class="page-head">
+        <div>
+          <h1>Owner dashboard</h1>
+          <p class="muted">Manage your listings and respond to booking requests.</p>
+        </div>
+        <a class="btn btn--primary" href="{% url 'property_create' %}">Add property</a>
+      </header>
+
+      {% if pending_approval_count %}
+      <div class="alert alert--info" role="status">
+        <p>{{ pending_approval_count }} of your listing{{ pending_approval_count|pluralize }} {{ pending_approval_count|pluralize:"is,are" }} waiting for administrator approval. {{ pending_approval_count|pluralize:"It,They" }} will appear in public search once approved.</p>
+      </div>
+      {% endif %}
+
+      <ul class="stat-row" aria-label="Owner summary">
+        <li class="stat"><span class="stat__num">{{ property_count|default:0 }}</span><span class="stat__label">Properties</span></li>
+        <li class="stat"><span class="stat__num">{{ approved_count|default:0 }}</span><span class="stat__label">Approved</span></li>
+        <li class="stat"><span class="stat__num">{{ pending_approval_count|default:0 }}</span><span class="stat__label">Awaiting approval</span></li>
+        <li class="stat"><span class="stat__num">{{ pending_requests_count|default:0 }}</span><span class="stat__label">Pending requests</span></li>
+      </ul>
+
+      <section aria-labelledby="req-title" class="dash-section">
+        <div class="section-head"><h2 id="req-title">Booking requests</h2></div>
+        {% if booking_requests %}
+          <div class="stack">
+            {% for booking in booking_requests %}
+              {% include "partials/booking_card.html" with booking=booking viewer="owner" %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <h3>No booking requests yet</h3>
+            <p>When a student sends a request for one of your approved properties, it will appear here.</p>
+          </div>
+        {% endif %}
+      </section>
+
+      <section aria-labelledby="props-title" class="dash-section">
+        <div class="section-head">
+          <h2 id="props-title">Your properties</h2>
+          {% if properties %}<a href="{% url 'my_properties' %}">Manage all properties</a>{% endif %}
+        </div>
+        {% if properties %}
+          <div class="stack">
+            {% for property in properties|slice:":4" %}
+              {% include "partials/owner_property_card.html" with property=property %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <h3>No properties yet</h3>
+            <p>Add a hostel or PG to start receiving requests.</p>
+            <div class="empty-state__actions"><a class="btn btn--primary" href="{% url 'property_create' %}">Add a property</a></div>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

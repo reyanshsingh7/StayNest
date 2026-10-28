@@ -1,0 +1,37 @@
+{% comment %}
+Owner's own property row. Usage: {% include "partials/owner_property_card.html" with property=property %}
+Shows approval status and availability as two separate things.
+{% endcomment %}
+{% with img=property.primary_image %}
+<article class="card owner-property">
+  <div class="owner-property__media">
+    {% if img %}<img src="{{ img.image.url }}" alt="Photo of {{ property.name }}" loading="lazy">{% else %}<span class="media-placeholder">No photo</span>{% endif %}
+  </div>
+  <div class="owner-property__body">
+    <h3 class="owner-property__title">{{ property.name }}</h3>
+    <p class="muted">{{ property.get_property_type_display }} in {% if property.locality %}{{ property.locality }}, {% endif %}{{ property.city }}</p>
+    <p class="price price--sm">&#8377;{{ property.monthly_rent|floatformat:"0g" }}<span> / month</span></p>
+    <dl class="status-pair">
+      <div>
+        <dt>Listing approval</dt>
+        <dd>{% include "partials/status_badge.html" with status=property.approval_status label=property.get_approval_status_display %}</dd>
+      </div>
+      <div>
+        <dt>Availability</dt>
+        <dd>{% if property.is_available %}<span class="badge badge--available">Available</span>{% else %}<span class="badge badge--unavailable">Unavailable</span>{% endif %}</dd>
+      </div>
+    </dl>
+    {% if property.approval_status == 'pending' %}
+      <p class="note">Waiting for administrator approval. It will not appear in public search until approved.</p>
+    {% elif property.approval_status == 'rejected' %}
+      <p class="note note--bad">This listing was not approved. Review the details and update it.</p>
+    {% endif %}
+  </div>
+  <div class="owner-property__actions">
+    <a class="btn btn--outline btn--sm" href="{% url 'property_edit' property.pk %}">Edit</a>
+    {% if property.approval_status == 'approved' %}
+      <a class="btn btn--ghost btn--sm" href="{% url 'property_detail' property.pk %}">View public page</a>
+    {% endif %}
+  </div>
+</article>
+{% endwith %}

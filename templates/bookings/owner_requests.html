@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Booking requests{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <div class="dashboard">
+    <aside class="dash-side">{% include "partials/dashboard_nav.html" with active="overview" %}</aside>
+
+    <div class="dash-main">
+      <header class="page-head">
+        <div>
+          <h1>Booking requests</h1>
+          <p class="muted">Requests for your properties. Accept or reject pending ones.</p>
+        </div>
+        <a class="btn btn--outline" href="{% url 'owner_dashboard' %}">Back to dashboard</a>
+      </header>
+
+      <nav class="tabs" aria-label="Filter requests by status">
+        <a href="{% url 'owner_requests' %}"{% if not status_filter %} aria-current="page"{% endif %}>All</a>
+        <a href="{% url 'owner_requests' %}?status=pending"{% if status_filter == 'pending' %} aria-current="page"{% endif %}>Pending</a>
+        <a href="{% url 'owner_requests' %}?status=accepted"{% if status_filter == 'accepted' %} aria-current="page"{% endif %}>Accepted</a>
+        <a href="{% url 'owner_requests' %}?status=rejected"{% if status_filter == 'rejected' %} aria-current="page"{% endif %}>Rejected</a>
+        <a href="{% url 'owner_requests' %}?status=cancelled"{% if status_filter == 'cancelled' %} aria-current="page"{% endif %}>Cancelled</a>
+      </nav>
+
+      {% if booking_requests %}
+        <div class="stack">
+          {% for booking in booking_requests %}
+            {% include "partials/booking_card.html" with booking=booking viewer="owner" %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          {% if status_filter %}
+            <h2>No {{ status_filter }} requests</h2>
+            <p>Requests with this status will appear here.</p>
+            <div class="empty-state__actions"><a class="btn btn--outline" href="{% url 'owner_requests' %}">Show all requests</a></div>
+          {% else %}
+            <h2>No booking requests yet</h2>
+            <p>When a student sends a request for one of your approved properties, it will appear here.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

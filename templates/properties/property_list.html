@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Browse hostels and PGs{% endblock %}
+{% block body_class %}page-listing{% endblock %}
+
+{% block content %}
+<div class="container page">
+  <header class="page-head">
+    <div>
+      <h1>Browse properties</h1>
+      <p class="muted" aria-live="polite">
+        {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ properties|length }}{% endif %}
+        result{% if page_obj and page_obj.paginator.count != 1 %}s{% elif not page_obj and properties|length != 1 %}s{% endif %}
+      </p>
+    </div>
+    <div class="page-head__tools">
+      <button type="button" class="btn btn--outline filter-toggle" aria-expanded="false" aria-controls="filters" data-filter-toggle>Filters</button>
+      <div class="sort-box">
+        <label for="sort">Sort by</label>
+        <select id="sort" name="sort" form="filter-form" data-autosubmit>
+          <option value="newest" {% if request.GET.sort == 'newest' or not request.GET.sort %}selected{% endif %}>Newest first</option>
+          <option value="rent_asc" {% if request.GET.sort == 'rent_asc' %}selected{% endif %}>Rent: low to high</option>
+          <option value="rent_desc" {% if request.GET.sort == 'rent_desc' %}selected{% endif %}>Rent: high to low</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="listing">
+    <aside id="filters" class="filters card" aria-label="Filter properties">
+      <form id="filter-form" method="get" action="{% url 'property_list' %}" data-rent-form>
+        <div class="field">
+          <label for="f-city">City</label>
+          <input id="f-city" name="city" type="text" value="{{ request.GET.city }}" list="city-options" autocomplete="off">
+          {% if cities %}<datalist id="city-options">{% for c in cities %}<option value="{{ c }}">{% endfor %}</datalist>{% endif %}
+        </div>
+        <div class="field">
+          <label for="f-locality">Locality</label>
+          <input id="f-locality" name="locality" type="text" value="{{ request.GET.locality }}" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="f-type">Property type</label>
+          <select id="f-type" name="property_type">
+            <option value="">Hostel or PG</option>
+            <option value="hostel" {% if request.GET.property_type == 'hostel' %}selected{% endif %}>Hostel</option>
+            <option value="pg" {% if request.GET.property_type == 'pg' %}selected{% endif %}>PG</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-accom">Accommodation for</label>
+          <select id="f-accom" name="accommodation_for">
+            <option value="">All types</option>
+            <option value="girls" {% if request.GET.accommodation_for == 'girls' %}selected{% endif %}>Girls Only</option>
+            <option value="boys" {% if request.GET.accommodation_for == 'boys' %}selected{% endif %}>Boys Only</option>
+            <option value="all" {% if request.GET.accommodation_for == 'all' %}selected{% endif %}>Co-ed / All Genders</option>
+          </select>
+        </div>
+
+        <fieldset class="field">
+          <legend>Monthly rent (&#8377;)</legend>
+          <div class="range-row">
+            <div>
+              <label class="sr-only" for="f-min">Minimum rent</label>
+              <input id="f-min" name="min_rent" type="number" min="0" step="500" inputmode="numeric" placeholder="Min" value="{{ request.GET.min_rent }}" data-min-rent>
+            </div>
+            <span aria-hidden="true">to</span>
+            <div>
+              <label class="sr-only" for="f-max">Maximum rent</label>
+              <input id="f-max" name="max_rent" type="number" min="0" step="500" inputmode="numeric" placeholder="Max" value="{{ request.GET.max_rent }}" data-max-rent>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Availability</legend>
+          <label class="check">
+            <input type="checkbox" name="availability" value="all" {% if request.GET.availability == 'all' %}checked{% endif %}>
+            <span>Include unavailable properties</span>
+          </label>
+        </fieldset>
+
+        {% if amenities %}
+        <fieldset class="field">
+          <legend>Amenities</legend>
+          <div class="check-list">
+            {% for amenity in amenities %}
+            <label class="check">
+              <input type="checkbox" name="amenities" value="{{ amenity.pk }}" {% if amenity.pk|stringformat:"s" in selected_amenities %}checked{% endif %}>
+              <span>{{ amenity.name }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        {% endif %}
+
+        <div class="filters__actions">
+          <button type="submit" class="btn btn--primary btn--block">Apply filters</button>
+          <a class="btn btn--ghost btn--block" href="{% url 'property_list' %}">Reset filters</a>
+        </div>
+      </form>
+    </aside>
+
+    <section class="results" aria-label="Search results">
+      {% if properties %}
+        <div class="property-grid property-grid--results">
+          {% for property in properties %}
+            {% include "partials/property_card.html" with property=property %}
+          {% endfor %}
+        </div>
+
+        {% if page_obj and page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Pagination">
+          {% if page_obj.has_previous %}
+            <a class="btn btn--outline btn--sm" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+          {% else %}
+            <span class="btn btn--outline btn--sm is-disabled" aria-disabled="true">Previous</span>
+          {% endif %}
+          <span class="pagination__info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a class="btn btn--outline btn--sm" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+          {% else %}
+            <span class="btn btn--outline btn--sm is-disabled" aria-disabled="true">Next</span>
+          {% endif %}
+        </nav>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <h2>No properties match your search</h2>
+          <p>Try a different city, widen the rent range, remove some amenities, or include unavailable properties.</p>
+          <div class="empty-state__actions">
+            <a class="btn btn--primary" href="{% url 'property_list' %}">Reset filters</a>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

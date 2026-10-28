@@ -1,0 +1,108 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Find hostels and PGs{% endblock %} | StayNest</title>
+  <meta name="description" content="{% block meta_description %}StayNest helps students find hostels and PGs and send booking requests to property owners.{% endblock %}">
+  <meta name="theme-color" content="#0f2540">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%230f2540'/%3E%3Cpath d='M7 14.5 14 8l7 6.5V21a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z' fill='none' stroke='%235fc4c0' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a class="brand" href="{% url 'home' %}" aria-label="StayNest home">
+        <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><rect width="28" height="28" rx="7" fill="#0f2540"/><path d="M7 14.5 14 8l7 6.5V21a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z" fill="none" stroke="#5fc4c0" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 22v-5h5v5" fill="none" stroke="#5fc4c0" stroke-width="2"/></svg>
+        <span class="brand__text">Stay<span>Nest</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+        <span class="sr-only">Toggle menu</span>
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+
+      <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+        <ul class="nav-links">
+          <li><a href="{% url 'property_list' %}"{% if request.resolver_match.url_name == 'property_list' %} aria-current="page"{% endif %}>Browse properties</a></li>
+          {% if user.is_authenticated %}
+            {% if user.is_owner %}
+              <li><a href="{% url 'owner_dashboard' %}"{% if request.resolver_match.url_name == 'owner_dashboard' %} aria-current="page"{% endif %}>Dashboard</a></li>
+              <li><a href="{% url 'my_properties' %}"{% if request.resolver_match.url_name == 'my_properties' %} aria-current="page"{% endif %}>My properties</a></li>
+            {% elif user.is_student %}
+              <li><a href="{% url 'student_dashboard' %}"{% if request.resolver_match.url_name == 'student_dashboard' %} aria-current="page"{% endif %}>Dashboard</a></li>
+              <li><a href="{% url 'my_requests' %}"{% if request.resolver_match.url_name == 'my_requests' %} aria-current="page"{% endif %}>My requests</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+        <div class="nav-actions">
+          {% if user.is_authenticated %}
+            <span class="nav-user" title="{{ user.email }}">{{ user.get_full_name|default:user.email }}</span>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--outline btn--sm">Log out</button>
+            </form>
+          {% else %}
+            <a class="btn btn--ghost btn--sm" href="{% url 'login' %}">Log in</a>
+            <a class="btn btn--primary btn--sm" href="{% url 'register' %}">Create account</a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  {% if messages %}
+  <div class="container messages" role="region" aria-label="Notifications">
+    {% for message in messages %}
+    <div class="alert alert--{{ message.level_tag|default:'info' }}" role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}" data-message data-level="{{ message.level_tag }}">
+      <p>{{ message }}</p>
+      <button type="button" class="alert__close" aria-label="Dismiss message" data-dismiss>&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main id="main" class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <p class="footer-brand">StayNest</p>
+        <p class="muted">Find hostels and PGs, compare them, and send booking requests to owners.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <ul class="footer-links">
+          <li><a href="{% url 'property_list' %}">Browse properties</a></li>
+          {% if not user.is_authenticated %}
+            <li><a href="{% url 'register' %}">Create an account</a></li>
+            <li><a href="{% url 'login' %}">Log in</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    <div class="container footer-note">
+      <p>&copy; {% now "Y" %} StayNest. A booking request is not a payment or a guaranteed reservation. The owner decides whether to accept it.</p>
+    </div>
+  </footer>
+
+  <dialog id="confirm-dialog" class="dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <form method="dialog">
+      <h2 id="confirm-title" class="dialog__title">Please confirm</h2>
+      <p id="confirm-text" class="dialog__text"></p>
+      <div class="dialog__actions">
+        <button type="submit" value="cancel" class="btn btn--outline">Go back</button>
+        <button type="submit" value="ok" class="btn btn--primary" id="confirm-ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="{% static 'js/main.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

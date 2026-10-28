@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Create your account{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+
+{% block content %}
+<div class="container auth">
+  <div class="auth-card card">
+    <h1>Create your account</h1>
+    <p class="muted">Students can send booking requests. Owners can list properties.</p>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert--error" role="alert"><ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+    {% elif form.errors %}
+    <div class="alert alert--error" role="alert"><p>Please fix the highlighted fields and try again.</p></div>
+    {% endif %}
+
+    <form method="post" novalidate class="stack">
+      {% csrf_token %}
+
+      <fieldset class="field role-field{% if form.role.errors %} field--error{% endif %}">
+        <legend>I want to register as a</legend>
+        <div class="role-options">
+          <label class="role-option">
+            <input type="radio" name="role" value="student" {% if form.role.value|default:'student' == 'student' %}checked{% endif %}>
+            <span><strong>Student</strong><small>Search properties and send requests</small></span>
+          </label>
+          <label class="role-option">
+            <input type="radio" name="role" value="owner" {% if form.role.value == 'owner' %}checked{% endif %}>
+            <span><strong>Owner</strong><small>List and manage my property</small></span>
+          </label>
+        </div>
+        {% if form.role.errors %}<ul class="field__errors" role="alert">{% for error in form.role.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+      </fieldset>
+
+      {% include "partials/field.html" with field=form.full_name label="Full name" %}
+      {% include "partials/field.html" with field=form.email label="Email address" %}
+      {% include "partials/field.html" with field=form.password1 label="Password" %}
+      {% include "partials/field.html" with field=form.password2 label="Confirm password" %}
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block">Create account</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}
