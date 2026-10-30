@@ -299,4 +299,22 @@
   } else if (invalid.length) {
     invalid[0].focus();
   }
+  /* 7. Demo notice ------------------------------------------------------------
+     Shown once per browser session. Uses sessionStorage only to remember that it
+     was dismissed; if storage is blocked, the notice simply shows on each page. */
+  var demoNotice = $('#demo-notice');
+  var demoOk = $('#demo-notice-ok');
+  if (demoNotice && demoOk && typeof demoNotice.showModal === 'function') {
+    var seen = false;
+    try { seen = sessionStorage.getItem('staynestDemoNoticeSeen') === '1'; } catch (err) { seen = false; }
+    if (!seen) {
+      demoNotice.showModal();
+      demoOk.focus();
+    }
+    demoNotice.addEventListener('close', function () {
+      try { sessionStorage.setItem('staynestDemoNoticeSeen', '1'); } catch (err) { /* ignore */ }
+    });
+    demoOk.addEventListener('click', function () { demoNotice.close(); });
+  }
+
 })();
