@@ -1,11 +1,15 @@
 from decimal import Decimal
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from properties.models import Amenity, Property
+from properties.models import Amenity, Property, PropertyImage
+
+IMAGE_DIR = Path(__file__).resolve().parents[2] / "sample_images"
 
 P = Property.PropertyType
 A = Property.AccommodationFor
@@ -18,6 +22,7 @@ SAMPLES = [
     # ---- Hostels ----
     {
         "name": "Saraswati Girls Hostel",
+        "images": ["girls-hostel-pods.jpg", "dorm-bunks-lockers.jpg"],
         "property_type": P.HOSTEL,
         "accommodation_for": A.GIRLS,
         "description": "Safe, well-lit girls hostel with a warden on site, 3 meals a day "
@@ -31,6 +36,7 @@ SAMPLES = [
     },
     {
         "name": "Aryabhatta Boys Hostel",
+        "images": ["boys-hostel-dorm.jpg", "hostel-mess-kitchen.jpg"],
         "property_type": P.HOSTEL,
         "accommodation_for": A.BOYS,
         "description": "Budget-friendly boys hostel with double and triple sharing rooms, "
@@ -44,6 +50,7 @@ SAMPLES = [
     },
     {
         "name": "Campus Connect Co-ed Hostel",
+        "images": ["coed-hostel-pods.jpg", "dorm-bunks-lockers.jpg"],
         "property_type": P.HOSTEL,
         "accommodation_for": A.ALL_GENDERS,
         "description": "Modern co-ed hostel with separate wings, biometric entry, AC rooms "
@@ -58,6 +65,7 @@ SAMPLES = [
     # ---- PGs ----
     {
         "name": "Lakshmi Girls PG",
+        "images": ["ac-room-attached-bath.jpg"],
         "property_type": P.PG,
         "accommodation_for": A.GIRLS,
         "description": "Homely PG for girls run by a family on the premises. Fully furnished "
@@ -71,6 +79,7 @@ SAMPLES = [
     },
     {
         "name": "Sunrise Boys PG",
+        "images": ["single-room-desk.jpg"],
         "property_type": P.PG,
         "accommodation_for": A.BOYS,
         "description": "Clean, well-ventilated rooms for boys close to the metro station. "
@@ -84,6 +93,7 @@ SAMPLES = [
     },
     {
         "name": "UrbanNest Co-ed PG",
+        "images": ["ac-room-attached-bath.jpg", "single-room-desk.jpg"],
         "property_type": P.PG,
         "accommodation_for": A.ALL_GENDERS,
         "description": "Premium co-ed PG for students and working professionals with AC "
@@ -121,6 +131,7 @@ class Command(BaseCommand):
         for data in SAMPLES:
             data = dict(data)
             amenity_slugs = data.pop("amenities")
+            image_files = data.pop("images", [])
             listing, was_created = Property.objects.get_or_create(
                 owner=owner,
                 name=data["name"],
@@ -131,6 +142,10 @@ class Command(BaseCommand):
                 listing.amenities.set(Amenity.objects.filter(slug__in=amenity_slugs))
                 created += 1
 
+            # Attach photos to new AND already-seeded listings that have none yet.
+            if image_files and not listing.images.exists():
+                self._attach_images(listing, image_files)
+
         self.stdout.write(
             self.style.SUCCESS(
                 f"Sample properties: {created} created, {len(SAMPLES) - created} already present."
@@ -138,3 +153,14 @@ class Command(BaseCommand):
         )
         if owner_created:
             self.stdout.write(f"Sample owner login: {OWNER_EMAIL} / {OWNER_PASSWORD}")
+
+    def _attach_images(self, listing, filenames):
+        """First file becomes the primary image (the model does this automatically)."""
+        for order, filename in enumerate(filenames):
+            path = IMAGE_DIR / filename
+            if not path.exists():
+                self.stdout.write(self.style.WARNING(f"Missing sample image: {path}"))
+                continue
+            image = PropertyImage(property=listing, sort_order=order)
+            image.image.save(filename, ContentFile(path.read_bytes()), save=False)
+            image.save()
